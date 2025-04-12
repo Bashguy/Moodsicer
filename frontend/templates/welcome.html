@@ -1,0 +1,145 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* CSS Styles */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f3f4f6; /* Gray background */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      text-align: center;
+      position: relative;
+    }
+
+    .container {
+      text-align: center;
+      position: relative;
+    }
+
+    h2 {
+      font-size: 2rem;
+      font-weight: normal;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 3.5rem;
+      font-weight: normal;
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .button {
+      background-color: #3b82f6;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.375rem;
+      text-transform: uppercase;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      border: none;
+      margin-top: 2rem;
+    }
+
+    .button:hover {
+      background-color: #2563eb; /* Darker blue on hover */
+    }
+
+    /* Positioning the circles inside the "o"s */
+    .moodsic-logo {
+      position: relative;
+      font-family: 'Kumbh', sans-serif;
+      font-size: 75px;
+      line-height: 1;
+      text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.2);
+      display: inline-block;
+    }
+
+    .moodsic-logo span {
+      position: relative;
+    }
+
+    /* Smaller circles positioned inside the "o"s */
+    .moodsic-logo .circle {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background-color: black;
+      border-radius: 50%;
+      top: 18px; /* Inside the "o" */
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* Smile SVG below the "o o" */
+    .svg-container {
+      position: relative;
+      top: 12px;
+      margin-bottom: 2rem; /* Adjusted for better spacing */
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+  <script>
+    function handleButtonClick() {
+      // Open window_screen in the current tab
+      window.location.href = "{% url 'window_screen' %}";
+      
+      // Open http://localhost:8000/login in a new tab
+      window.open("http://localhost:8000/login", "_blank");
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h2>Welcome to</h2>
+    <div class="moodsic-logo">
+      <h1>
+        m
+        <span>
+          o
+          <div class="circle"></div> <!-- Circle inside the "o" -->
+        </span>
+        <span>
+          o
+          <div class="circle"></div> <!-- Circle inside the "o" -->
+        </span>
+        dsic
+      </h1>
+
+      <!-- Smile SVG under the "o o" -->
+      <div class="svg-container">
+        <svg
+          width="120"
+          height="40"
+          viewBox="0 0 120 40"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 20C10 20 30 35 60 35C90 35 110 20 110 20"
+            stroke="black"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Trigger JavaScript function on button click -->
+    <button class="button" onclick="handleButtonClick()">
+      Get Started
+    </button>
+  </div>
+</body>
+</html>
