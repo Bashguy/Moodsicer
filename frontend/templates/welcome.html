@@ -6,140 +6,187 @@
   <meta charset="UTF-8">
   <title>Welcome</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
   <style>
-    /* CSS Styles */
+    :root {
+      --primary-color: #3b82f6;
+      --primary-hover: #2563eb;
+      --bg-color: #B8A2FB;
+      --text-color: #fff;
+      --accent-dark: rgba(0, 0, 0, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f3f4f6; /* Gray background */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--bg-color);
       margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
       text-align: center;
-      position: relative;
     }
 
     .container {
-      text-align: center;
-      position: relative;
+      max-width: 800px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     h2 {
-      font-size: 2rem;
-      font-weight: normal;
-      margin-bottom: 1rem;
+      font-size: 3rem;
+      font-weight: 400;
+      margin: 0 0 1rem;
+      color: #222;
     }
 
     h1 {
-      font-size: 3.5rem;
-      font-weight: normal;
-      margin-bottom: 1rem;
-      text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.2);
+      font-family: 'Kumbh Sans', sans-serif;
+      font-size: 5rem;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: -0.25rem;
+      color: #222;
+      position: relative;
     }
 
-    .button {
-      background-color: #3b82f6;
-      color: white;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.375rem;
-      text-transform: uppercase;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      border: none;
-      margin-top: 2rem;
-    }
-
-    .button:hover {
-      background-color: #2563eb; /* Darker blue on hover */
-    }
-
-    /* Positioning the circles inside the "o"s */
     .moodsic-logo {
       position: relative;
-      font-family: 'Kumbh', sans-serif;
-      font-size: 75px;
-      line-height: 1;
-      text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.2);
       display: inline-block;
+      text-shadow: 2px 2px 4px var(--accent-dark);
     }
 
     .moodsic-logo span {
+      display: inline-block;
       position: relative;
     }
 
-    /* Smaller circles positioned inside the "o"s */
-    .moodsic-logo .circle {
+    .circle {
       position: absolute;
-      width: 12px;
-      height: 12px;
+      width: 22px;
+      height: 22px;
       background-color: black;
       border-radius: 50%;
-      top: 18px; /* Inside the "o" */
-      left: 50%;
+      top: 52px;
+      left: 54%;
       transform: translateX(-50%);
     }
 
-    /* Smile SVG below the "o o" */
     .svg-container {
-      position: relative;
-      top: 12px;
-      margin-bottom: 2rem; /* Adjusted for better spacing */
-      display: flex;
-      justify-content: center;
+      margin-top: -2rem;
+      margin-bottom: 1rem;
+    }
+
+    .button {
+      background-color: var(--primary-color);
+      color: var(--text-color);
+      padding: 1rem 2.5rem;
+      border-radius: 0.5rem;
+      border: none;
+      font-size: 1.25rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .button:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 3rem;
+        letter-spacing: -0.1rem;
+      }
+
+      .button {
+        font-size: 1rem;
+        padding: 0.75rem 2rem;
+      }
+
+      .circle {
+        top: 35px;
+        width: 18px;
+        height: 18px;
+      }
     }
   </style>
-  <script>
-    function handleButtonClick() {
-      // Open window_screen in the current tab
+
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const mouth = document.getElementById('mouth-path');
+
+    const expressions = [
+      'M10 20C10 20 30 35 60 35C90 35 110 20 110 20', // Smile
+      'M10 25L110 25',                                 // Neutral
+      'M10 30C10 30 30 15 60 15C90 15 110 30 110 30'   // Sad
+    ];
+
+    let index = 0;
+
+    setInterval(() => {
+      mouth.setAttribute('d', expressions[index]);
+      index = (index + 1) % expressions.length;
+    }, 2500); // Change every 2.5 seconds
+  });
+
+  async function handleButtonClick() {
+  try {
+    const response = await fetch("http://127.0.0.1:5000/callback-login", { method: 'GET' });
+    if (response.ok) {
       window.location.href = "{% url 'window_screen' %}";
-      
-      // Open http://localhost:8000/login in a new tab
-      window.open("http://localhost:8000/login", "_blank");
+    } else {
+      console.error("Callback failed.");
     }
-  </script>
+  } catch (error) {
+    console.error("Error contacting backend:", error);
+  }
+}
+
+</script>
 </head>
 <body>
   <div class="container">
     <h2>Welcome to</h2>
+
     <div class="moodsic-logo">
       <h1>
         m
-        <span>
-          o
-          <div class="circle"></div> <!-- Circle inside the "o" -->
-        </span>
-        <span>
-          o
-          <div class="circle"></div> <!-- Circle inside the "o" -->
-        </span>
+        <span>o<div class="circle"></div></span>
+        <span>o<div class="circle"></div></span>
         dsic
       </h1>
-
-      <!-- Smile SVG under the "o o" -->
-      <div class="svg-container">
-        <svg
-          width="120"
-          height="40"
-          viewBox="0 0 120 40"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M10 20C10 20 30 35 60 35C90 35 110 20 110 20"
-            stroke="black"
-            strokeWidth="4"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
     </div>
 
-    <!-- Trigger JavaScript function on button click -->
-    <button class="button" onclick="handleButtonClick()">
-      Get Started
-    </button>
+    <div class="svg-container">
+      <svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path 
+          id="mouth-path"
+          d="M10 20C10 20 30 35 60 35C90 35 110 20 110 20"
+          transform="translate(-20, 0)" 
+          stroke="black"
+          stroke-width="4"
+          stroke-linecap="round"
+        />
+      </svg>
+    </div>
+
+    <button class="button" onclick="handleButtonClick()">Get Started</button>
   </div>
 </body>
 </html>
