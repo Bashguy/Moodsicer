@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emotion Detection</title>
+  <style>
+    /* Styles for layout and design */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+    }
+    .video-container, .song-suggestion {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .video-container video {
+      width: 100%;
+      max-width: 600px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .song-suggestion {
+      width: 300px;
+    }
+    .mood-text {
+      font-size: 24px;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #333;
+    }
+    .song-list {
+      list-style: none;
+      padding-left: 0;
+    }
+    .song-list li {
+      padding: 5px;
+      font-size: 16px;
+      color: #555;
+    }
+    .button {
+      background-color: #3b82f6;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .button:hover {
+      background-color: #2563eb;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Video Container -->
+    <div class="video-container">
+      <video id="videoElement" autoplay playsinline></video>
+      <div id="emotionText" style="position: absolute; bottom: 10px; left: 10px; color: white; background-color: rgba(0, 0, 0, 0.6); padding: 5px;">
+        Emotion: <span id="emotion">None</span>
+      </div>
+    </div>
+
+    <!-- Song Suggestion -->
+    <div class="song-suggestion">
+      <h2 id="songTitle">Emotion: None</h2>
+      <div id="moodText" class="mood-text">Mood: None</div>
+      <ul id="songList" class="song-list">
+        <!-- Songs will be dynamically added here -->
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Video stream setup
+    const video = document.getElementById('videoElement');
+    const emotionText = document.getElementById('emotion');
+    const songTitle = document.getElementById('songTitle');
+    const songList = document.getElementById('songList');
+    const moodText = document.getElementById('moodText');
+
+    const happySongs = [
+      "Happy - Pharrell Williams",
+      "Can't Stop The Feeling! - Justin Timberlake",
+      "Uptown Funk - Mark Ronson ft. Bruno Mars",
+      "Walking on Sunshine - Katrina & The Waves",
+      "Good as Hell - Lizzo"
+    ];
+
+    const sadSongs = [
+      "Someone Like You - Adele",
+      "Let Her Go - Passenger",
+      "Fix You - Coldplay",
+      "All I Want - Kodaline",
+      "Skinny Love - Bon Iver"
+    ];
+
+    // Initialize the webcam stream
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(function(stream) {
+        video.srcObject = stream;
+        startEmotionDetection();  // Start emotion detection after the video stream is set
+      })
+      .catch(function(err) {
+        console.log("Error: " + err);
+      });
+
+    function startEmotionDetection() {
+      setInterval(function() {
+        // Capture an image from the video feed
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL('image/jpeg');
+
+        // Send image data to FastAPI for emotion detection
+        fetch('http://127.0.0.1:8000/detect-emotion', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ image: imageData }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.results && data.results.mood) {
+            const detectedEmotion = data.results.mood.toLowerCase();
+            updateMood(detectedEmotion);  // Update UI with the detected emotion
+          }
+        })
+        .catch(error => {
+          console.error('Error detecting emotion:', error);
+        });
+      }, 1000);  // Send an image every second (adjust this interval as needed)
+    }
+
+    // Update mood and suggest songs
+    function updateMood(mood) {
+      // Update the mood text dynamically
+      moodText.textContent = `Mood: ${mood.charAt(0).toUpperCase() + mood.slice(1)}`;
+
+      // Update the emotion display
+      emotionText.textContent = mood;
+
+      // Change the song title based on the mood
+      songTitle.textContent = `Emotion: ${mood.charAt(0).toUpperCase() + mood.slice(1)} Vibes`;
+
+      // Suggest songs based on the detected mood
+      let songs = mood === 'happy' ? happySongs : sadSongs;
+      songList.innerHTML = ''; // Clear the existing songs
+      songs.forEach(song => {
+        const li = document.createElement('li');
+        li.textContent = song;
+        songList.appendChild(li);
+      });
+    }
+  </script>
+
+</body>
+</html>
