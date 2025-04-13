@@ -270,6 +270,23 @@ def categorize_playlists():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+def map_emotion(features):
+    valence = features["valence"]
+    energy = features["energy"]
+    danceability = features["danceability"]
+    acousticness = features["acousticness"]
+
+    if valence > 0.6 and energy > 0.5:
+        return "happy"
+    elif valence < 0.4 and acousticness > 0.5:
+        return "sad"
+    elif energy > 0.7 and valence < 0.4:
+        return "angry"
+    elif energy < 0.5 and acousticness > 0.6:
+        return "neutral"
+    else:
+        return "surprised"
 
 print("Registered Routes:")
 for rule in app.url_map.iter_rules():
