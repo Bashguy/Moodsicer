@@ -81,6 +81,40 @@ def get_user_playlists(token):
     else:
         return {"error": "Failed to fetch playlists", "details": response.json()}
     
+def print_all_playlist_tracks(token):
+    playlists_url = "https://api.spotify.com/v1/me/playlists"
+    headers = {"Authorization": f"Bearer {token}"}
+    playlists_response = requests.get(playlists_url, headers=headers)
+
+    if playlists_response.status_code != 200:
+        print("Failed to fetch playlists")
+        return
+
+    playlists = playlists_response.json().get("items", [])
+
+    for playlist in playlists:
+        playlist_name = playlist["name"]
+        playlist_id = playlist["id"]
+        print(f"\nPlaylist: {playlist_name}")
+
+        tracks_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+        while tracks_url:
+            tracks_response = requests.get(tracks_url, headers=headers)
+            if tracks_response.status_code != 200:
+                print(f"Failed to fetch tracks for {playlist_name}")
+                break
+
+            track_items = tracks_response.json().get("items", [])
+            for item in track_items:
+                track = item.get("track")
+                if track:
+                    track_name = track.get("name")
+                    artist_name = track["artists"][0]["name"] if track["artists"] else "Unknown Artist"
+                    print(f" - {track_name} by {artist_name}")
+
+            # For playlists with more than 100 tracks (Spotify paginates), follow `next` URL:
+            tracks_url = tracks_response.json().get("next")
+    
 def classify_emotion_from_genres(genres):
     genre_to_emotion = {
         "happy": ["pop", "dance", "edm"],
