@@ -347,6 +347,85 @@ def debug_categorize():
     except Exception as e:
         print("Error in debug_categorize:", e)
         return jsonify({"error": str(e)}), 500
+    
+@app.before_first_request
+def categorize_all_playlists_on_startup():
+    try:
+        # Get access token
+        token_url = "https://accounts.spotify.com/api/token"
+        auth_string = f"{client_id}:{client_secret}"
+        auth_base64 = base64.b64encode(auth_string.encode()).decode()
+        headers = {
+            "Authorization": f"Basic {auth_base64}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        token_data = {"grant_type": "client_credentials"}
+        token_response = requests.post(token_url, headers=headers, data=token_data)
+
+        if token_response.status_code != 200:
+            print("❌ Failed to get access token")
+            return
+
+        access_token = token_response.json()["access_token"]
+        playlist_headers = {"Authorization": f"Bearer {access_token}"}
+
+        # Fetch playlists
+        playlists_response = requests.get("https://api.spotify.com/v1/me/playlists", headers=playlist_headers)
+        if playlists_response.status_code != 200:
+            print("❌ Failed to fetch playlists")
+            return
+
+        playlists = playlists_response.json().get("items", [])
+        emotion_categories = {}
+
+        for playlist in playlists:
+            playlist_id = playlist["id"]
+            playlist_name = playlist["name"]
+            tracks_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+
+            while tracks_url:
+                tracks_response = requests.get(tracks_url, headers=playlist_headers)
+                if tracks_response.status_code != 200:
+                    print(f"⚠️  Failed to fetch tracks for {playlist_name}")
+                    break
+
+                for item in tracks_response.json().get("items", []):
+                    track = item.get("track")
+                    if not track or not track.get("artists"):
+                        continue
+
+                    track_name = track["name"]
+                    artist_name = track["artists"][0]["name"]
+                    artist_id = track["artists"][0]["id"]
+
+                    # Get artist genres
+                    artist_url = f"https://api.spotify.com/v1/artists/{artist_id}"
+                    artist_response = requests.get(artist_url, headers=playlist_headers)
+                    if artist_response.status_code != 200:
+                        continue
+
+                    genres = artist_response.json().get("genres", [])
+
+                    # Classify emotion from genres
+                    emotion = classify_emotion_from_genres(genres)
+                    if emotion:
+                        if emotion not in emotion_categories:
+                            emotion_categories[emotion] = []
+                        emotion_categories[emotion].append({
+                            "track": track_name,
+                            "artist": artist_name,
+                            "playlist": playlist_name
+                        })
+
+                tracks_url = tracks_response.json().get("next")
+
+        print("\n🎵 Songs Categorized by Emotion:\n")
+        for emotion, songs in emotion_categories.items():
+            for song in songs:
+                print(f"{song['track']} by {song['artist']} (from '{song['playlist']}') → Emotion: {emotion.capitalize()}")
+
+    except Exception as e:
+        print(f"Error in categorize_all_playlists_on_startup: {e}")
 
 print("Registered Routes:")
 for rule in app.url_map.iter_rules():
