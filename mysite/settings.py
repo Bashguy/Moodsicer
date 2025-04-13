@@ -2,17 +2,15 @@
 
 from dotenv import load_dotenv
 import os
-from pathlib import Path  # Import Path to handle file paths
+from pathlib import Path  
 
-# Define the base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from the .env file in the backend folder
 load_dotenv(dotenv_path=os.path.join(BASE_DIR, 'backend', '.env'))
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'default-secret-key')  # Fallback if not found
+SECRET_KEY = os.getenv('SECRET_KEY', 'default-secret-key')  
 DEBUG = True
-ALLOWED_HOSTS = []  # Keep it empty for development
+ALLOWED_HOSTS = []  
 
 # Installed apps (we only need basic apps for rendering templates)
 INSTALLED_APPS = [
