@@ -1,127 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Emotion Detection</title>
   <style>
-    /* Styles for layout and design */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f3f4f6;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .container {
-      display: flex;
-      gap: 20px;
-    }
-    .video-container, .song-suggestion {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    .video-container video {
-      width: 100%;
-      max-width: 600px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-    .song-suggestion {
-      width: 300px;
-    }
-    .mood-text {
-      font-size: 24px;
-      margin-top: 10px;
-      font-weight: bold;
-      color: #333;
-    }
-    .song-list {
-      list-style: none;
-      padding-left: 0;
-    }
-    .song-list li {
-      padding: 5px;
-      font-size: 16px;
-      color: #555;
-    }
-    .button {
-      background-color: #3b82f6;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 25px;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    .button:hover {
-      background-color: #2563eb;
-    }
+    html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #b8a2fb 0%, #e0c3fc 100%);
+  color: #333;
+  min-height: 100vh;
+}
+
+.top-nav {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 40px;
+}
+
+.video-container,
+.song-suggestion {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+  flex: 1 1 300px;
+  max-width: 600px;
+}
+
+.video-container:hover,
+.song-suggestion:hover {
+  transform: translateY(-5px);
+}
+
+.video-container video {
+  width: 100%;
+  border-radius: 12px;
+}
+
+.song-suggestion {
+  max-width: 350px;
+}
+
+.mood-text {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 12px 0;
+  color: #5a3e9b;
+}
+
+.song-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.song-list li {
+  padding: 10px;
+  margin-bottom: 6px;
+  background-color: #f3f3f3;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+  cursor: default;
+}
+
+.song-list li:hover {
+  background-color: #e4dfff;
+}
+
+.button {
+  background: #6b4eff;
+  color: white;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s ease;
+  text-decoration: none;
+}
+
+.button:hover {
+  background: #5538d2;
+}
+
+#emotionOverlay {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+h2, #songTitle {
+  font-size: 20px;
+  color: #4b2bb2;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
   </style>
 </head>
 <body>
 
+  <div class="top-nav">
+    <a href="{% url 'welcome' %}" class="button">Back to Welcome</a>
+    <a href="{% url 'how_it_works' %}" class="button">How It Works</a>
+  </div>
+
   <div class="container">
-    <!-- Video Container -->
     <div class="video-container">
       <video id="videoElement" autoplay playsinline></video>
-      <div id="emotionText" style="position: absolute; bottom: 10px; left: 10px; color: white; background-color: rgba(0, 0, 0, 0.6); padding: 5px;">
-        Emotion: <span id="emotion">None</span>
-      </div>
+      <div id="emotionOverlay">Emotion: <span id="emotion">None</span></div>
     </div>
 
-    <!-- Song Suggestion -->
     <div class="song-suggestion">
       <h2 id="songTitle">Emotion: None</h2>
       <div id="moodText" class="mood-text">Mood: None</div>
-      <ul id="songList" class="song-list">
-        <!-- Songs will be dynamically added here -->
-      </ul>
+      <ul id="songList" class="song-list"></ul>
     </div>
   </div>
 
   <script>
-    // Video stream setup
     const video = document.getElementById('videoElement');
-    const emotionText = document.getElementById('emotion');
+    const emotionSpan = document.getElementById('emotion');
     const songTitle = document.getElementById('songTitle');
     const songList = document.getElementById('songList');
     const moodText = document.getElementById('moodText');
 
-    const happySongs = [
-      "Happy - Pharrell Williams",
-      "Can't Stop The Feeling! - Justin Timberlake",
-      "Uptown Funk - Mark Ronson ft. Bruno Mars",
-      "Walking on Sunshine - Katrina & The Waves",
-      "Good as Hell - Lizzo"
-    ];
+    const emotionToSongs = {
+      angry: ["Killing in the Name - Rage Against the Machine", "Break Stuff - Limp Bizkit", "Given Up - Linkin Park", "Duality - Slipknot", "Stronger - Kanye West"],
+      disgust: ["Just Like You - Three Days Grace", "Going Under - Evanescence", "Tourniquet - Marilyn Manson", "My Own Summer - Deftones", "People = Shit - Slipknot"],
+      fear: ["Mad World - Gary Jules", "Creep - Radiohead", "Lullabies - Yuna", "The Sound of Silence - Simon & Garfunkel", "Everybody’s Got to Learn Sometime - Beck"],
+      happy: ["Happy - Pharrell Williams", "Can't Stop The Feeling! - Justin Timberlake", "Uptown Funk - Mark Ronson ft. Bruno Mars", "Walking on Sunshine - Katrina & The Waves", "Good as Hell - Lizzo"],
+      neutral: ["Clocks - Coldplay", "Somewhere Only We Know - Keane", "Let Her Go - Passenger", "Photograph - Ed Sheeran", "Lost in Japan - Shawn Mendes"],
+      sad: ["Someone Like You - Adele", "Fix You - Coldplay", "Skinny Love - Bon Iver", "All I Want - Kodaline", "Let Her Go - Passenger"],
+      surprise: ["Viva La Vida - Coldplay", "Bohemian Rhapsody - Queen", "Electric Feel - MGMT", "Feel It Still - Portugal. The Man", "Pompeii - Bastille"]
+    };
 
-    const sadSongs = [
-      "Someone Like You - Adele",
-      "Let Her Go - Passenger",
-      "Fix You - Coldplay",
-      "All I Want - Kodaline",
-      "Skinny Love - Bon Iver"
-    ];
+    let currentMood = "";
 
-    // Initialize the webcam stream
     navigator.mediaDevices.getUserMedia({ video: true })
-      .then(function(stream) {
+      .then(stream => {
         video.srcObject = stream;
-        startEmotionDetection();  // Start emotion detection after the video stream is set
+        video.onloadedmetadata = () => {
+          video.play();
+          startEmotionDetection();
+        };
       })
-      .catch(function(err) {
-        console.log("Error: " + err);
-      });
+      .catch(err => console.log("Camera error:", err));
 
     function startEmotionDetection() {
-      setInterval(function() {
-        // Capture an image from the video feed
+      setInterval(() => {
+        if (video.videoWidth === 0 || video.videoHeight === 0) return;
+
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
@@ -129,47 +192,66 @@
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const imageData = canvas.toDataURL('image/jpeg');
 
-        // Send image data to FastAPI for emotion detection
-        fetch('http://127.0.0.1:8000/detect-emotion', {
+        fetch('http://127.0.0.1:5000/detect-emotion', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: imageData }),
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
-          if (data.results && data.results.mood) {
-            const detectedEmotion = data.results.mood.toLowerCase();
-            updateMood(detectedEmotion);  // Update UI with the detected emotion
+          console.log("Backend response:", data);  // Debugging output
+          const results = data.results;
+          if (Array.isArray(results) && results.length > 0 && results[0].emotion) {
+            const detectedEmotion = results[0].emotion.toLowerCase();
+            updateMood(detectedEmotion);
+          } else {
+            updateMood("neutral");
           }
         })
-        .catch(error => {
-          console.error('Error detecting emotion:', error);
+        .catch(err => {
+          console.error('Detection error:', err);
+          updateMood("neutral");
         });
-      }, 1000);  // Send an image every second (adjust this interval as needed)
+      }, 1000);
     }
 
-    // Update mood and suggest songs
     function updateMood(mood) {
-      // Update the mood text dynamically
-      moodText.textContent = `Mood: ${mood.charAt(0).toUpperCase() + mood.slice(1)}`;
+  if (mood === currentMood) return;
+  currentMood = mood;
 
-      // Update the emotion display
-      emotionText.textContent = mood;
+  const capitalMood = capitalize(mood);
 
-      // Change the song title based on the mood
-      songTitle.textContent = `Emotion: ${mood.charAt(0).toUpperCase() + mood.slice(1)} Vibes`;
+  const emojiMap = {
+    angry: ["😡", "😠", "🤬"],
+    disgust: ["🤢", "🤮", "😒"],
+    fear: ["😨", "😰", "😱"],
+    happy: ["😄", "😁", "😆", "😊"],
+    neutral: ["😐", "😶", "🙂"],
+    sad: ["😢", "😭", "😞", "😔"],
+    surprise: ["😲", "😳", "🤯"]
+  };
 
-      // Suggest songs based on the detected mood
-      let songs = mood === 'happy' ? happySongs : sadSongs;
-      songList.innerHTML = ''; // Clear the existing songs
-      songs.forEach(song => {
-        const li = document.createElement('li');
-        li.textContent = song;
-        songList.appendChild(li);
-      });
-    }
+  const emojis = emojiMap[mood] || ["❓"];
+  const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+  moodText.textContent = `Mood: ${capitalMood} ${emoji}`;
+  emotionSpan.textContent = `${capitalMood} ${emoji}`;
+  songTitle.textContent = `Emotion: ${capitalMood} Vibes ${emoji}`;
+
+  const songs = emotionToSongs[mood] || ["No songs available for this mood."];
+  songList.innerHTML = '';
+  songs.forEach(song => {
+    const li = document.createElement('li');
+    li.textContent = song;
+    songList.appendChild(li);
+  });
+}
+
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+
   </script>
 
 </body>
