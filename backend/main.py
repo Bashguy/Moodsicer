@@ -287,6 +287,66 @@ def map_emotion(features):
         return "neutral"
     else:
         return "surprised"
+    
+@app.route("/debug-categorize", methods=["POST"])
+def debug_categorize():
+    try:
+        data = request.get_json()
+        playlists = data.get("playlists")
+        user_token = data.get("access_token")
+
+        if not playlists or not user_token:
+            return jsonify({"error": "Missing playlists or access token"}), 400
+
+        headers = {"Authorization": f"Bearer {user_token}"}
+        emotion_buckets = {
+            "happy": [], "sad": [], "angry": [], "relaxed": [], "unknown": []
+        }
+
+        for playlist in playlists.get("items", []):
+            playlist_name = playlist["name"]
+            playlist_id = playlist["id"]
+            tracks_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+
+            while tracks_url:
+                response = requests.get(tracks_url, headers=headers)
+                if response.status_code != 200:
+                    break
+
+                tracks_data = response.json()
+                tracks = tracks_data.get("items", [])
+
+                for item in tracks:
+                    track = item.get("track")
+                    if not track or not track.get("id"):
+                        continue
+
+                    track_id = track["id"]
+                    features_url = f"https://api.spotify.com/v1/audio-features/{track_id}"
+                    features_response = requests.get(features_url, headers=headers)
+
+                    if features_response.status_code != 200:
+                        continue
+
+                    features = features_response.json()
+                    emotion = map_emotion(features)
+
+                    song_info = f"{track['name']} by {track['artists'][0]['name']} (from '{playlist_name}')"
+                    emotion_buckets[emotion].append(song_info)
+
+                tracks_url = tracks_data.get("next")
+
+        # Print songs categorized by emotion
+        for emotion, songs in emotion_buckets.items():
+            print(f"\n--- {emotion.upper()} ---")
+            for song in songs:
+                print(song)
+
+        return jsonify({"message": "Printed categorized songs to console!"})
+
+    except Exception as e:
+        print("Error in debug_categorize:", e)
+        return jsonify({"error": str(e)}), 500
 
 print("Registered Routes:")
 for rule in app.url_map.iter_rules():
