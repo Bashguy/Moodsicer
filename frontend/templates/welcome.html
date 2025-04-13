@@ -145,19 +145,10 @@
     }, 2500); // Change every 2.5 seconds
   });
 
-  async function handleButtonClick() {
-  try {
-    const response = await fetch("http://127.0.0.1:5000/callback-login", { method: 'GET' });
-    if (response.ok) {
-      window.location.href = "{% url 'window_screen' %}";
-    } else {
-      console.error("Callback failed.");
-    }
-  } catch (error) {
-    console.error("Error contacting backend:", error);
+  function handleButtonClick() {
+    window.open("http://127.0.0.1:5000/login", "_blank");
+    window.location.href = "{% url 'window_screen' %}";
   }
-}
-
 </script>
 </head>
 <body>
