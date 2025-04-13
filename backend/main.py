@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, redirect
-from flask_cors import CORS 
+from flask_cors import CORS, cross_origin
 from dotenv import load_dotenv
 import webbrowser
 import requests
@@ -8,18 +8,17 @@ import base64
 import numpy as np
 import cv2
 from cnn_utils import EmotionDetector
-from flask_cors import cross_origin
 
 app = Flask(__name__)
-CORS(app, origins=["http://127.0.0.1:8000/"], supports_credentials=True)
+CORS(app, supports_credentials=True)
 load_dotenv()
 
 emotion_detector = EmotionDetector()
 
-client_id = 'SPOTIFY_CLIENT_ID'
-client_secret = 'SPOTIFY_CLIENT_SECRET'
-redirect_uri = 'SPOTIFY_REDIRECT_URI'
-
+client_id = os.getenv("SPOTIFY_CLIENT_ID")
+client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+redirect_uri = os.getenv("SPOTIFY_REDIRECT_URI")
+print(f"Redirect URI: {redirect_uri}")
 
 @app.route("/login")
 def login():
@@ -31,7 +30,6 @@ def login():
     )
     return redirect(auth_url)
 
-
 @app.route("/callback")
 def callback():
     code = request.args.get("code")
@@ -42,9 +40,10 @@ def callback():
     profile = get_user_profile(token)
     playlists = get_user_playlists(token)
 
-    frontend_url = f"http://localhost:3000/profile?profile={profile}&playlists={playlists}"
-    return redirect(frontend_url)
+    print_all_playlist_tracks(token)
 
+    frontend_url = f"http://127.0.0.1:8000/profile?profile={profile}&playlists={playlists}"
+    return redirect(frontend_url)
 
 def get_access_token(code):
     token_url = "https://accounts.spotify.com/api/token"
@@ -61,7 +60,6 @@ def get_access_token(code):
     else:
         raise Exception("Failed to get access token")
 
-
 def get_user_profile(token):
     url = "https://api.spotify.com/v1/me"
     headers = {"Authorization": f"Bearer {token}"}
@@ -71,16 +69,18 @@ def get_user_profile(token):
     else:
         raise Exception("Failed to get user profile")
 
-
 def get_user_playlists(token):
     url = "https://api.spotify.com/v1/me/playlists"
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
-        return response.json()
+        playlists = response.json()
+        for playlist in playlists.get('items', []):
+            print(f"Playlist Name: {playlist['name']}")
+        return playlists
     else:
         return {"error": "Failed to fetch playlists", "details": response.json()}
-    
+
 def print_all_playlist_tracks(token):
     playlists_url = "https://api.spotify.com/v1/me/playlists"
     headers = {"Authorization": f"Bearer {token}"}
@@ -91,7 +91,6 @@ def print_all_playlist_tracks(token):
         return
 
     playlists = playlists_response.json().get("items", [])
-
     for playlist in playlists:
         playlist_name = playlist["name"]
         playlist_id = playlist["id"]
@@ -112,9 +111,8 @@ def print_all_playlist_tracks(token):
                     artist_name = track["artists"][0]["name"] if track["artists"] else "Unknown Artist"
                     print(f" - {track_name} by {artist_name}")
 
-            # For playlists with more than 100 tracks (Spotify paginates), follow `next` URL:
             tracks_url = tracks_response.json().get("next")
-    
+
 def classify_emotion_from_genres(genres):
     genre_to_emotion = {
         "happy": ["pop", "dance", "edm"],
@@ -132,12 +130,11 @@ def classify_emotion_from_genres(genres):
 @cross_origin(origins=["http://127.0.0.1:8000"], supports_credentials=True)
 def detect_emotion():
     if request.method == "OPTIONS":
-        return '', 200  
+        return '', 200
 
     try:
         data = request.get_json()
         image_data = data.get("image")
-
         if not image_data:
             return jsonify({"error": "No image provided"}), 400
 
@@ -153,7 +150,6 @@ def detect_emotion():
         return jsonify({"results": results})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/find-matching-song", methods=["POST"])
 def find_matching_song():
@@ -216,7 +212,7 @@ def find_matching_song():
     except Exception as e:
         print("Error in find_matching_song:", e)
         return jsonify({"error": str(e)}), 500
-    
+
 @app.route("/categorize-playlists-by-emotion", methods=["POST"])
 def categorize_playlists():
     try:
@@ -270,7 +266,7 @@ def categorize_playlists():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
 def map_emotion(features):
     valence = features["valence"]
     energy = features["energy"]
@@ -284,10 +280,10 @@ def map_emotion(features):
     elif energy > 0.7 and valence < 0.4:
         return "angry"
     elif energy < 0.5 and acousticness > 0.6:
-        return "neutral"
+        return "relaxed"
     else:
-        return "surprised"
-    
+        return "unknown"
+
 @app.route("/debug-categorize", methods=["POST"])
 def debug_categorize():
     try:
@@ -336,7 +332,6 @@ def debug_categorize():
 
                 tracks_url = tracks_data.get("next")
 
-        # Print songs categorized by emotion
         for emotion, songs in emotion_buckets.items():
             print(f"\n--- {emotion.upper()} ---")
             for song in songs:
@@ -347,89 +342,6 @@ def debug_categorize():
     except Exception as e:
         print("Error in debug_categorize:", e)
         return jsonify({"error": str(e)}), 500
-    
-@app.before_first_request
-def categorize_all_playlists_on_startup():
-    try:
-        # Get access token
-        token_url = "https://accounts.spotify.com/api/token"
-        auth_string = f"{client_id}:{client_secret}"
-        auth_base64 = base64.b64encode(auth_string.encode()).decode()
-        headers = {
-            "Authorization": f"Basic {auth_base64}",
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
-        token_data = {"grant_type": "client_credentials"}
-        token_response = requests.post(token_url, headers=headers, data=token_data)
-
-        if token_response.status_code != 200:
-            print("❌ Failed to get access token")
-            return
-
-        access_token = token_response.json()["access_token"]
-        playlist_headers = {"Authorization": f"Bearer {access_token}"}
-
-        # Fetch playlists
-        playlists_response = requests.get("https://api.spotify.com/v1/me/playlists", headers=playlist_headers)
-        if playlists_response.status_code != 200:
-            print("❌ Failed to fetch playlists")
-            return
-
-        playlists = playlists_response.json().get("items", [])
-        emotion_categories = {}
-
-        for playlist in playlists:
-            playlist_id = playlist["id"]
-            playlist_name = playlist["name"]
-            tracks_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
-
-            while tracks_url:
-                tracks_response = requests.get(tracks_url, headers=playlist_headers)
-                if tracks_response.status_code != 200:
-                    print(f"⚠️  Failed to fetch tracks for {playlist_name}")
-                    break
-
-                for item in tracks_response.json().get("items", []):
-                    track = item.get("track")
-                    if not track or not track.get("artists"):
-                        continue
-
-                    track_name = track["name"]
-                    artist_name = track["artists"][0]["name"]
-                    artist_id = track["artists"][0]["id"]
-
-                    # Get artist genres
-                    artist_url = f"https://api.spotify.com/v1/artists/{artist_id}"
-                    artist_response = requests.get(artist_url, headers=playlist_headers)
-                    if artist_response.status_code != 200:
-                        continue
-
-                    genres = artist_response.json().get("genres", [])
-
-                    # Classify emotion from genres
-                    emotion = classify_emotion_from_genres(genres)
-                    if emotion:
-                        if emotion not in emotion_categories:
-                            emotion_categories[emotion] = []
-                        emotion_categories[emotion].append({
-                            "track": track_name,
-                            "artist": artist_name,
-                            "playlist": playlist_name
-                        })
-
-                tracks_url = tracks_response.json().get("next")
-
-        print("\n🎵 Songs Categorized by Emotion:\n")
-        for emotion, songs in emotion_categories.items():
-            for song in songs:
-                print(f"{song['track']} by {song['artist']} (from '{song['playlist']}') → Emotion: {emotion.capitalize()}")
-
-    except Exception as e:
-        print(f"Error in categorize_all_playlists_on_startup: {e}")
-
-print("Registered Routes:")
-for rule in app.url_map.iter_rules():
-    print(rule)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=True)
