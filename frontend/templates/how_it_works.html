@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>How It Works</title>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #b8a2fb 0%, #e0c3fc 100%);
+      color: #333;
+      min-height: 100vh;
+    }
+
+    .top-nav {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+      background-color: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .button {
+      background-color: #8b5cf6;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      text-decoration: none;
+      font-size: 16px;
+    }
+
+    .button:hover {
+      background-color: #7c3aed;
+    }
+
+    .how-it-works {
+      max-width: 960px;
+      margin: 40px auto;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      padding: 40px 30px;
+    }
+
+    .how-it-works h1 {
+      color: #8b5cf6;
+      font-size: 36px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .how-it-works h2 {
+      font-size: 24px;
+      color: #4c1d95;
+      margin-top: 40px;
+      margin-bottom: 10px;
+    }
+
+    .how-it-works p {
+      color: #4b5563;
+      font-size: 16px;
+      line-height: 1.7;
+      margin: 0 0 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: #f5f3ff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .top-nav {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .button {
+        width: 100%;
+        text-align: center;
+      }
+
+      .how-it-works {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-nav">
+    <a href="{% url 'welcome' %}" class="button">Back to Welcome</a>
+    <a href="{% url 'window_screen' %}" class="button">Back to Camera</a>
+  </div>
+
+  <div id="howItWorks" class="how-it-works">
+    <h1>How It Works</h1>
+
+    <h2>Convolutional Neural Network (CNN)</h2>
+    <p>Our emotion detection system uses a sophisticated CNN trained on facial expressions. It processes images through multiple layers to identify facial features associated with different emotions.</p>
+
+    <h2>Real-Time Processing</h2>
+    <p>1. Your webcam captures video frames</p>
+    <p>2. Each frame is sent through our CNN</p>
+    <p>3. Facial features are analyzed</p>
+    <p>4. The model predicts emotion with confidence</p>
+    <p>5. Results appear instantly</p>
+
+    <h2>CNN Architecture</h2>
+    <div class="grid">
+      <div class="card">
+        <p><strong>Input Layer</strong><br/>Receives 48x48 grayscale images</p>
+        <p><strong>Convolutional Layers</strong><br/>Extract facial features using filters</p>
+        <p><strong>Pooling Layers</strong><br/>Reduce spatial dimensions</p>
+      </div>
+      <div class="card">
+        <p><strong>Fully Connected Layers</strong><br/>Process extracted features</p>
+        <p><strong>Dropout Layers</strong><br/>Prevent overfitting</p>
+        <p><strong>Output Layer</strong><br/>Predicts emotion probabilities</p>
+      </div>
+    </div>
+
+    <h2>Accuracy</h2>
+    <p>Each prediction includes a confidence score, letting you see how reliable the detection is.</p>
+  </div>
+
+</body>
+</html>
