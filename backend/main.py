@@ -216,6 +216,60 @@ def find_matching_song():
     except Exception as e:
         print("Error in find_matching_song:", e)
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/categorize-playlists-by-emotion", methods=["POST"])
+def categorize_playlists():
+    try:
+        data = request.get_json()
+        playlists = data.get("playlists")
+        user_token = data.get("access_token")
+
+        if not playlists or not user_token:
+            return jsonify({"error": "Missing playlists or token"}), 400
+
+        headers = {"Authorization": f"Bearer {user_token}"}
+        emotion_buckets = {
+            "happy": [], "sad": [], "angry": [], "relaxed": [], "unknown": []
+        }
+
+        for playlist in playlists.get("items", []):
+            playlist_id = playlist["id"]
+            tracks_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+
+            while tracks_url:
+                response = requests.get(tracks_url, headers=headers)
+                tracks_data = response.json()
+                tracks = tracks_data.get("items", [])
+
+                for item in tracks:
+                    track = item.get("track")
+                    if not track:
+                        continue
+
+                    track_id = track["id"]
+                    features_url = f"https://api.spotify.com/v1/audio-features/{track_id}"
+                    features_response = requests.get(features_url, headers=headers)
+
+                    if features_response.status_code != 200:
+                        continue
+
+                    features = features_response.json()
+                    emotion = map_emotion(features)
+
+                    emotion_buckets[emotion].append({
+                        "name": track["name"],
+                        "artist": track["artists"][0]["name"],
+                        "id": track_id,
+                        "preview_url": track.get("preview_url"),
+                        "external_url": track["external_urls"]["spotify"]
+                    })
+
+                tracks_url = tracks_data.get("next")
+
+        return jsonify(emotion_buckets)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 print("Registered Routes:")
 for rule in app.url_map.iter_rules():
