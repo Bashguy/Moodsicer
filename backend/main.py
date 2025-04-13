@@ -80,7 +80,19 @@ def get_user_playlists(token):
         return response.json()
     else:
         return {"error": "Failed to fetch playlists", "details": response.json()}
+    
+def classify_emotion_from_genres(genres):
+    genre_to_emotion = {
+        "happy": ["pop", "dance", "edm"],
+        "sad": ["acoustic", "piano", "singer-songwriter"],
+        "angry": ["rock", "metal", "hardcore"],
+        "relaxed": ["ambient", "chill", "lo-fi"]
+    }
 
+    for emotion, genre_list in genre_to_emotion.items():
+        if set(genre_list) & set(genres):
+            return emotion
+    return None
 
 @app.route("/detect-emotion", methods=["POST", "OPTIONS"])
 @cross_origin(origins=["http://127.0.0.1:8000"], supports_credentials=True)
